@@ -34,7 +34,12 @@ export function Dashboard({ overview }: { overview: Overview }) {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <CategoryChart data={overview.perCategory} selected={cat} onSelect={selectCategory} />
+            <CategoryChart
+              data={overview.perCategory}
+              categories={overview.categories}
+              selected={cat}
+              onSelect={selectCategory}
+            />
           </CardContent>
         </Card>
       </section>

@@ -13,6 +13,7 @@ import {
 } from "@/components/ui/select";
 import { type Expense } from "@/db/schema";
 import { formatDateLong, formatDayShort, formatVND } from "@/lib/format";
+import { categoryColor } from "@/lib/colors";
 import { ExpenseDialog } from "./expense-dialog";
 
 export const ALL = "__all__";
@@ -60,6 +61,7 @@ export function ExpenseSection({
   }, [filtered]);
 
   return (
+    <>
     <Card>
       <CardHeader className="flex flex-col gap-4">
         <div className="flex w-full items-center justify-between gap-3">
@@ -67,10 +69,8 @@ export function ExpenseSection({
           <ExpenseDialog
             categories={categories}
             trigger={
-              <Button className="h-9 shrink-0 sm:h-11 sm:px-5 sm:text-base">
-                <Plus className="size-4 sm:size-5" />
-                <span className="hidden sm:inline">Thêm khoản chi</span>
-                <span className="sm:hidden">Thêm</span>
+              <Button className="hidden shrink-0 sm:inline-flex sm:h-11 sm:px-5 sm:text-base">
+                <Plus className="size-5" /> Thêm khoản chi
               </Button>
             }
           />
@@ -139,6 +139,10 @@ export function ExpenseSection({
                           type="button"
                           className="flex w-full items-center gap-3 px-4 py-3 text-left transition-colors hover:bg-muted/60"
                         >
+                          <span
+                            className="size-2.5 shrink-0 rounded-full"
+                            style={{ background: categoryColor(e.category, categories) }}
+                          />
                           <div className="min-w-0 flex-1">
                             <div className="truncate font-medium">{e.item}</div>
                             <div className="truncate text-xs text-muted-foreground">
@@ -158,5 +162,20 @@ export function ExpenseSection({
         )}
       </CardContent>
     </Card>
+
+    {/* Mobile floating action button */}
+    <ExpenseDialog
+      categories={categories}
+      trigger={
+        <Button
+          size="icon"
+          aria-label="Thêm khoản chi"
+          className="fixed bottom-6 right-6 z-40 size-14 rounded-full shadow-lg sm:hidden"
+        >
+          <Plus className="size-6" />
+        </Button>
+      }
+    />
+    </>
   );
 }

@@ -4,18 +4,20 @@ import { useEffect, useState } from "react";
 import { Cell, Pie, PieChart, Sector } from "recharts";
 import { ChartContainer, type ChartConfig } from "@/components/ui/chart";
 import { formatVND } from "@/lib/format";
+import { categoryColor } from "@/lib/colors";
 
-const COLORS = ["var(--chart-1)", "var(--chart-2)", "var(--chart-3)", "var(--chart-4)", "var(--chart-5)"];
 const ALL = "__all__";
 
 const config = { amount: { label: "Số tiền" } } satisfies ChartConfig;
 
 export function CategoryChart({
   data,
+  categories,
   selected,
   onSelect,
 }: {
   data: { category: string; amount: number; pct: number }[];
+  categories: string[];
   selected: string;
   onSelect: (category: string) => void;
 }) {
@@ -60,10 +62,10 @@ export function CategoryChart({
               onMouseLeave={() => setHover(null)}
               className="cursor-pointer focus:outline-none"
             >
-              {data.map((d, i) => (
+              {data.map((d) => (
                 <Cell
                   key={d.category}
-                  fill={COLORS[i % COLORS.length]}
+                  fill={categoryColor(d.category, categories)}
                   fillOpacity={isDimmed(d.category) ? 0.25 : 1}
                   stroke="var(--background)"
                   strokeWidth={selected === d.category ? 3 : 1}
@@ -76,7 +78,7 @@ export function CategoryChart({
         <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center px-10 text-center">
           {sel ? (
             <>
-              <span className="line-clamp-1 text-[11px] font-medium" style={{ color: COLORS[selIdx % COLORS.length] }}>
+              <span className="line-clamp-1 text-[11px] font-medium" style={{ color: categoryColor(sel.category, categories) }}>
                 {sel.category}
               </span>
               <span className="text-base font-semibold tabular-nums">{formatVND(sel.amount)}</span>
@@ -105,7 +107,7 @@ export function CategoryChart({
       </div>
 
       <ul className="w-full space-y-1.5 text-sm sm:w-auto">
-        {data.map((d, i) => (
+        {data.map((d) => (
           <li key={d.category}>
             <button
               type="button"
@@ -114,7 +116,7 @@ export function CategoryChart({
                 isDimmed(d.category) ? "opacity-40" : ""
               } ${selected === d.category ? "bg-muted" : ""}`}
             >
-              <span className="size-3 shrink-0 rounded-sm" style={{ background: COLORS[i % COLORS.length] }} />
+              <span className="size-3 shrink-0 rounded-sm" style={{ background: categoryColor(d.category, categories) }} />
               <span className="flex-1 min-w-[120px]">{d.category}</span>
               <span className="font-medium tabular-nums">{formatVND(d.amount)}</span>
               <span className="w-12 text-right text-muted-foreground tabular-nums">{(d.pct * 100).toFixed(1)}%</span>
