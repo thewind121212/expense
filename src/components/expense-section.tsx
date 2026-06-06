@@ -62,13 +62,13 @@ export function ExpenseSection({
   return (
     <Card>
       <CardHeader className="flex flex-col gap-4">
-        <div className="flex items-center justify-between gap-2">
-          <CardTitle className="text-lg">Danh sách chi tiêu</CardTitle>
+        <div className="flex items-center justify-between gap-3">
+          <CardTitle className="min-w-0 truncate text-lg">Danh sách chi tiêu</CardTitle>
           <ExpenseDialog
             categories={categories}
             trigger={
-              <Button size="lg" className="h-11 px-5 text-base">
-                <Plus className="size-5" />
+              <Button className="h-9 shrink-0 sm:h-11 sm:px-5 sm:text-base">
+                <Plus className="size-4 sm:size-5" />
                 <span className="hidden sm:inline">Thêm khoản chi</span>
                 <span className="sm:hidden">Thêm</span>
               </Button>
