@@ -1,15 +1,9 @@
 "use client";
 
-import { useMemo, useState, useTransition } from "react";
-import { Download, Pencil, Plus, Trash2 } from "lucide-react";
-import { toast } from "sonner";
+import { useMemo, useState } from "react";
+import { Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Select,
   SelectContent,
@@ -26,7 +20,6 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { CATEGORIES, type Expense } from "@/db/schema";
-import { deleteExpense } from "@/app/actions";
 import { formatDayShort, formatVND } from "@/lib/format";
 import { ExpenseDialog } from "./expense-dialog";
 
@@ -42,12 +35,8 @@ export function ExpenseSection({
   onCatChange: (v: string) => void;
 }) {
   const [day, setDay] = useState<string>(ALL);
-  const [isPending, startTransition] = useTransition();
 
-  const days = useMemo(
-    () => [...new Set(expenses.map((e) => e.date))].sort(),
-    [expenses]
-  );
+  const days = useMemo(() => [...new Set(expenses.map((e) => e.date))].sort(), [expenses]);
 
   const filtered = useMemo(
     () =>
@@ -59,55 +48,20 @@ export function ExpenseSection({
 
   const filteredTotal = filtered.reduce((s, e) => s + e.amount, 0);
 
-  function exportCSV() {
-    const esc = (v: string | number | null) => {
-      const s = String(v ?? "");
-      return /[",\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
-    };
-    const lines = [
-      ["Ngày", "Hạng mục", "Danh mục", "Số tiền", "Ghi chú"].join(","),
-      ...filtered.map((e) => [e.date, e.item, e.category, e.amount, e.note].map(esc).join(",")),
-    ];
-    const blob = new Blob(["﻿" + lines.join("\n")], { type: "text/csv;charset=utf-8;" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = "chi-tieu-quynhon.csv";
-    a.click();
-    URL.revokeObjectURL(url);
-  }
-
-  function onDelete(id: number) {
-    if (!confirm("Xoá khoản chi này?")) return;
-    startTransition(async () => {
-      try {
-        await deleteExpense(id);
-        toast.success("Đã xoá");
-      } catch {
-        toast.error("Xoá thất bại");
-      }
-    });
-  }
-
   return (
     <Card>
       <CardHeader className="flex flex-col gap-4">
         <div className="flex items-center justify-between gap-2">
           <CardTitle className="text-lg">Danh sách chi tiêu</CardTitle>
-          <div className="flex items-center gap-2">
-            <Button variant="outline" className="h-10" onClick={exportCSV}>
-              <Download className="size-4" /> Xuất
-            </Button>
-            <ExpenseDialog
-              trigger={
-                <Button className="h-10">
-                  <Plus className="size-4" />
-                  <span className="hidden sm:inline">Thêm khoản chi</span>
-                  <span className="sm:hidden">Thêm</span>
-                </Button>
-              }
-            />
-          </div>
+          <ExpenseDialog
+            trigger={
+              <Button size="lg" className="h-11 px-5 text-base">
+                <Plus className="size-5" />
+                <span className="hidden sm:inline">Thêm khoản chi</span>
+                <span className="sm:hidden">Thêm</span>
+              </Button>
+            }
+          />
         </div>
 
         <div className="flex flex-wrap items-center gap-2">
@@ -143,63 +97,46 @@ export function ExpenseSection({
 
       <CardContent>
         <div className="mb-2 text-sm text-muted-foreground">
-          {filtered.length} khoản · {formatVND(filteredTotal)}
+          {filtered.length} khoản · {formatVND(filteredTotal)} · chạm vào dòng để sửa / xoá
         </div>
-        <div className="overflow-x-auto">
-          <Table>
-            <TableHeader>
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead className="whitespace-nowrap">Ngày</TableHead>
+              <TableHead>Hạng mục</TableHead>
+              <TableHead className="hidden sm:table-cell">Danh mục</TableHead>
+              <TableHead className="hidden md:table-cell">Ghi chú</TableHead>
+              <TableHead className="whitespace-nowrap text-right">Số tiền</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {filtered.length === 0 ? (
               <TableRow>
-                <TableHead className="w-[64px]">Ngày</TableHead>
-                <TableHead>Hạng mục</TableHead>
-                <TableHead>Danh mục</TableHead>
-                <TableHead>Ghi chú</TableHead>
-                <TableHead className="text-right">Số tiền</TableHead>
-                <TableHead className="w-[88px] text-right">Thao tác</TableHead>
+                <TableCell colSpan={5} className="h-24 text-center text-muted-foreground">
+                  Không có khoản chi nào
+                </TableCell>
               </TableRow>
-            </TableHeader>
-            <TableBody>
-              {filtered.length === 0 ? (
-                <TableRow>
-                  <TableCell colSpan={6} className="h-24 text-center text-muted-foreground">
-                    Không có khoản chi nào
-                  </TableCell>
-                </TableRow>
-              ) : (
-                filtered.map((e) => (
-                  <TableRow key={e.id} className={isPending ? "opacity-60" : undefined}>
-                    <TableCell className="tabular-nums">{formatDayShort(e.date)}</TableCell>
-                    <TableCell className="font-medium">{e.item}</TableCell>
-                    <TableCell>{e.category}</TableCell>
-                    <TableCell className="text-muted-foreground">{e.note}</TableCell>
-                    <TableCell className="text-right font-medium tabular-nums">
-                      {formatVND(e.amount)}
-                    </TableCell>
-                    <TableCell className="text-right">
-                      <div className="flex justify-end gap-1">
-                        <ExpenseDialog
-                          expense={e}
-                          trigger={
-                            <Button variant="ghost" size="icon" className="size-8">
-                              <Pencil className="size-4" />
-                            </Button>
-                          }
-                        />
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="size-8 text-destructive"
-                          onClick={() => onDelete(e.id)}
-                        >
-                          <Trash2 className="size-4" />
-                        </Button>
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                ))
-              )}
-            </TableBody>
-          </Table>
-        </div>
+            ) : (
+              filtered.map((e) => (
+                <ExpenseDialog
+                  key={e.id}
+                  expense={e}
+                  trigger={
+                    <TableRow className="cursor-pointer">
+                      <TableCell className="whitespace-nowrap tabular-nums">{formatDayShort(e.date)}</TableCell>
+                      <TableCell className="font-medium">{e.item}</TableCell>
+                      <TableCell className="hidden sm:table-cell">{e.category}</TableCell>
+                      <TableCell className="hidden text-muted-foreground md:table-cell">{e.note}</TableCell>
+                      <TableCell className="whitespace-nowrap text-right font-medium tabular-nums">
+                        {formatVND(e.amount)}
+                      </TableCell>
+                    </TableRow>
+                  }
+                />
+              ))
+            )}
+          </TableBody>
+        </Table>
       </CardContent>
     </Card>
   );

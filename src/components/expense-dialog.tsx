@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { format, parse } from "date-fns";
 import { vi } from "date-fns/locale";
-import { CalendarIcon } from "lucide-react";
+import { CalendarIcon, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
@@ -27,7 +27,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { CATEGORIES, type Expense } from "@/db/schema";
-import { addExpense, updateExpense } from "@/app/actions";
+import { addExpense, deleteExpense, updateExpense } from "@/app/actions";
 import { cn } from "@/lib/utils";
 
 const toISO = (d: Date) => format(d, "yyyy-MM-dd");
@@ -45,7 +45,23 @@ export function ExpenseDialog({
   const [dateOpen, setDateOpen] = useState(false);
   const [date, setDate] = useState<Date>(expense?.date ? fromISO(expense.date) : new Date(2026, 5, 6));
   const [amount, setAmount] = useState<number>(expense?.amount ?? 0);
+  const [deleting, setDeleting] = useState(false);
   const isEdit = Boolean(expense);
+
+  async function handleDelete() {
+    if (!expense) return;
+    if (!confirm("Xoá khoản chi này?")) return;
+    setDeleting(true);
+    try {
+      await deleteExpense(expense.id);
+      toast.success("Đã xoá khoản chi");
+      setOpen(false);
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Xoá thất bại");
+    } finally {
+      setDeleting(false);
+    }
+  }
 
   async function onSubmit(formData: FormData) {
     setPending(true);
@@ -156,8 +172,13 @@ export function ExpenseDialog({
             </div>
           </div>
 
-          <DialogFooter>
-            <Button type="submit" disabled={pending}>
+          <DialogFooter className={isEdit ? "sm:justify-between" : undefined}>
+            {isEdit && (
+              <Button type="button" variant="destructive" onClick={handleDelete} disabled={deleting} className="h-10">
+                <Trash2 className="size-4" /> {deleting ? "Đang xoá..." : "Xoá"}
+              </Button>
+            )}
+            <Button type="submit" disabled={pending} className="h-10">
               {pending ? "Đang lưu..." : isEdit ? "Lưu" : "Thêm"}
             </Button>
           </DialogFooter>
