@@ -4,6 +4,7 @@ import { expenses, CATEGORIES, type Expense } from "@/db/schema";
 
 export type Overview = {
   expenses: Expense[];
+  categories: string[];
   total: number;
   count: number;
   daysWithSpend: number;
@@ -28,18 +29,20 @@ export async function getOverview(): Promise<Overview> {
 
   const catMap = new Map<string, number>();
   for (const r of rows) catMap.set(r.category, (catMap.get(r.category) ?? 0) + r.amount);
-  const perCategory = CATEGORIES.map((category) => {
-    const amount = catMap.get(category) ?? 0;
-    return { category, amount, pct: total > 0 ? amount / total : 0 };
-  })
+  const perCategory = [...catMap.entries()]
+    .map(([category, amount]) => ({ category, amount, pct: total > 0 ? amount / total : 0 }))
     .filter((c) => c.amount > 0)
     .sort((a, b) => b.amount - a.amount);
+
+  // Default categories plus any user-created ones already present in the data.
+  const categories = [...new Set<string>([...CATEGORIES, ...catMap.keys()])];
 
   const daysWithSpend = perDay.filter((d) => d.amount > 0).length;
   const avgPerDay = daysWithSpend > 0 ? total / daysWithSpend : 0;
 
   return {
     expenses: rows,
+    categories,
     total,
     count: rows.length,
     daysWithSpend,

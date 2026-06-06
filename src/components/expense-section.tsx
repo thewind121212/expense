@@ -19,7 +19,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { CATEGORIES, type Expense } from "@/db/schema";
+import { type Expense } from "@/db/schema";
 import { formatDayShort, formatVND } from "@/lib/format";
 import { ExpenseDialog } from "./expense-dialog";
 
@@ -27,10 +27,12 @@ export const ALL = "__all__";
 
 export function ExpenseSection({
   expenses,
+  categories,
   cat,
   onCatChange,
 }: {
   expenses: Expense[];
+  categories: string[];
   cat: string;
   onCatChange: (v: string) => void;
 }) {
@@ -54,6 +56,7 @@ export function ExpenseSection({
         <div className="flex items-center justify-between gap-2">
           <CardTitle className="text-lg">Danh sách chi tiêu</CardTitle>
           <ExpenseDialog
+            categories={categories}
             trigger={
               <Button size="lg" className="h-11 px-5 text-base">
                 <Plus className="size-5" />
@@ -71,7 +74,7 @@ export function ExpenseSection({
             </SelectTrigger>
             <SelectContent>
               <SelectItem value={ALL}>Tất cả danh mục</SelectItem>
-              {CATEGORIES.map((c) => (
+              {categories.map((c) => (
                 <SelectItem key={c} value={c}>
                   {c}
                 </SelectItem>
@@ -121,6 +124,7 @@ export function ExpenseSection({
                 <ExpenseDialog
                   key={e.id}
                   expense={e}
+                  categories={categories}
                   trigger={
                     <TableRow className="cursor-pointer">
                       <TableCell className="whitespace-nowrap tabular-nums">{formatDayShort(e.date)}</TableCell>

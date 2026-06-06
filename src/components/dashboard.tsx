@@ -40,7 +40,12 @@ export function Dashboard({ overview }: { overview: Overview }) {
       </section>
 
       <section className="mt-6">
-        <ExpenseSection expenses={overview.expenses} cat={cat} onCatChange={setCat} />
+        <ExpenseSection
+          expenses={overview.expenses}
+          categories={overview.categories}
+          cat={cat}
+          onCatChange={setCat}
+        />
       </section>
     </>
   );

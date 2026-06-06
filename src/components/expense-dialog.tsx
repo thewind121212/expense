@@ -5,6 +5,17 @@ import { format, parse } from "date-fns";
 import { vi } from "date-fns/locale";
 import { CalendarIcon, Trash2 } from "lucide-react";
 import { toast } from "sonner";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
 import {
@@ -26,18 +37,22 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { CATEGORIES, type Expense } from "@/db/schema";
+import { type Expense } from "@/db/schema";
 import { addExpense, deleteExpense, updateExpense } from "@/app/actions";
 import { cn } from "@/lib/utils";
+import { formatVND } from "@/lib/format";
 
+const NEW_CAT = "__new_cat__";
 const toISO = (d: Date) => format(d, "yyyy-MM-dd");
 const fromISO = (s: string) => parse(s, "yyyy-MM-dd", new Date());
 
 export function ExpenseDialog({
   expense,
+  categories,
   trigger,
 }: {
   expense?: Expense;
+  categories: string[];
   trigger: React.ReactElement;
 }) {
   const [open, setOpen] = useState(false);
@@ -45,12 +60,15 @@ export function ExpenseDialog({
   const [dateOpen, setDateOpen] = useState(false);
   const [date, setDate] = useState<Date>(expense?.date ? fromISO(expense.date) : new Date(2026, 5, 6));
   const [amount, setAmount] = useState<number>(expense?.amount ?? 0);
+  const [category, setCategory] = useState<string>(expense?.category ?? categories[0] ?? "");
+  const [newCategory, setNewCategory] = useState("");
   const [deleting, setDeleting] = useState(false);
   const isEdit = Boolean(expense);
+  const creatingCat = category === NEW_CAT;
+  const resolvedCategory = creatingCat ? newCategory.trim() : category;
 
   async function handleDelete() {
     if (!expense) return;
-    if (!confirm("Xoá khoản chi này?")) return;
     setDeleting(true);
     try {
       await deleteExpense(expense.id);
@@ -152,18 +170,30 @@ export function ExpenseDialog({
 
             <div className="grid gap-2">
               <Label htmlFor="category">Danh mục</Label>
-              <Select name="category" defaultValue={expense?.category ?? CATEGORIES[0]}>
+              <input type="hidden" name="category" value={resolvedCategory} />
+              <Select value={category} onValueChange={(v) => setCategory(v ?? "")}>
                 <SelectTrigger id="category">
-                  <SelectValue placeholder="Chọn danh mục" />
+                  <SelectValue>
+                    {(v) => (v === NEW_CAT ? "Tạo danh mục mới…" : (v as string) || "Chọn danh mục")}
+                  </SelectValue>
                 </SelectTrigger>
                 <SelectContent>
-                  {CATEGORIES.map((c) => (
+                  {categories.map((c) => (
                     <SelectItem key={c} value={c}>
                       {c}
                     </SelectItem>
                   ))}
+                  <SelectItem value={NEW_CAT}>➕ Tạo danh mục mới</SelectItem>
                 </SelectContent>
               </Select>
+              {creatingCat && (
+                <Input
+                  value={newCategory}
+                  onChange={(e) => setNewCategory(e.target.value)}
+                  placeholder="Tên danh mục mới (vd: Tiền phòng)"
+                  autoFocus
+                />
+              )}
             </div>
 
             <div className="grid gap-2">
@@ -174,9 +204,29 @@ export function ExpenseDialog({
 
           <DialogFooter className={isEdit ? "sm:justify-between" : undefined}>
             {isEdit && (
-              <Button type="button" variant="destructive" onClick={handleDelete} disabled={deleting} className="h-10">
-                <Trash2 className="size-4" /> {deleting ? "Đang xoá..." : "Xoá"}
-              </Button>
+              <AlertDialog>
+                <AlertDialogTrigger
+                  render={
+                    <Button type="button" variant="destructive" className="h-10">
+                      <Trash2 className="size-4" /> Xoá
+                    </Button>
+                  }
+                />
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>Xoá khoản chi?</AlertDialogTitle>
+                    <AlertDialogDescription>
+                      {expense?.item} · {expense ? formatVND(expense.amount) : ""}. Hành động này không thể hoàn tác.
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel>Huỷ</AlertDialogCancel>
+                    <AlertDialogAction variant="destructive" onClick={handleDelete} disabled={deleting}>
+                      {deleting ? "Đang xoá..." : "Xoá"}
+                    </AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
             )}
             <Button type="submit" disabled={pending} className="h-10">
               {pending ? "Đang lưu..." : isEdit ? "Lưu" : "Thêm"}

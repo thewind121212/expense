@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { eq } from "drizzle-orm";
 import { db } from "@/db";
-import { expenses, CATEGORIES, type Category } from "@/db/schema";
+import { expenses } from "@/db/schema";
 
 function parseForm(formData: FormData) {
   const date = String(formData.get("date") ?? "").trim();
@@ -14,7 +14,8 @@ function parseForm(formData: FormData) {
 
   if (!date) throw new Error("Thiếu ngày");
   if (!item) throw new Error("Thiếu hạng mục");
-  if (!CATEGORIES.includes(category as Category)) throw new Error("Danh mục không hợp lệ");
+  if (!category) throw new Error("Thiếu danh mục");
+  if (category.length > 60) throw new Error("Tên danh mục quá dài");
   if (!Number.isFinite(amount) || amount < 0) throw new Error("Số tiền không hợp lệ");
 
   return { date, item, category, amount: Math.round(amount), note: note || null };
