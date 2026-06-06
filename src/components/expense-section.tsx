@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState, useTransition } from "react";
-import { Pencil, Plus, Trash2 } from "lucide-react";
+import { Download, Pencil, Plus, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import {
@@ -59,6 +59,24 @@ export function ExpenseSection({
 
   const filteredTotal = filtered.reduce((s, e) => s + e.amount, 0);
 
+  function exportCSV() {
+    const esc = (v: string | number | null) => {
+      const s = String(v ?? "");
+      return /[",\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
+    };
+    const lines = [
+      ["Ngày", "Hạng mục", "Danh mục", "Số tiền", "Ghi chú"].join(","),
+      ...filtered.map((e) => [e.date, e.item, e.category, e.amount, e.note].map(esc).join(",")),
+    ];
+    const blob = new Blob(["﻿" + lines.join("\n")], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "chi-tieu-quynhon.csv";
+    a.click();
+    URL.revokeObjectURL(url);
+  }
+
   function onDelete(id: number) {
     if (!confirm("Xoá khoản chi này?")) return;
     startTransition(async () => {
@@ -73,8 +91,25 @@ export function ExpenseSection({
 
   return (
     <Card>
-      <CardHeader className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <CardTitle>Danh sách chi tiêu</CardTitle>
+      <CardHeader className="flex flex-col gap-4">
+        <div className="flex items-center justify-between gap-2">
+          <CardTitle className="text-lg">Danh sách chi tiêu</CardTitle>
+          <div className="flex items-center gap-2">
+            <Button variant="outline" className="h-10" onClick={exportCSV}>
+              <Download className="size-4" /> Xuất
+            </Button>
+            <ExpenseDialog
+              trigger={
+                <Button className="h-10">
+                  <Plus className="size-4" />
+                  <span className="hidden sm:inline">Thêm khoản chi</span>
+                  <span className="sm:hidden">Thêm</span>
+                </Button>
+              }
+            />
+          </div>
+        </div>
+
         <div className="flex flex-wrap items-center gap-2">
           <Select value={cat} onValueChange={(v) => onCatChange(v ?? ALL)}>
             <SelectTrigger className="w-[170px]" size="sm">
@@ -103,14 +138,6 @@ export function ExpenseSection({
               ))}
             </SelectContent>
           </Select>
-
-          <ExpenseDialog
-            trigger={
-              <Button size="sm">
-                <Plus className="size-4" /> Thêm khoản chi
-              </Button>
-            }
-          />
         </div>
       </CardHeader>
 
