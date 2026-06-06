@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { Plus } from "lucide-react";
+import { CalendarDays, Plus, Tag } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
@@ -78,7 +78,8 @@ export function ExpenseSection({
 
         <div className="flex flex-wrap items-center gap-2">
           <Select value={cat} onValueChange={(v) => onCatChange(v ?? ALL)}>
-            <SelectTrigger className="w-[170px]" size="sm">
+            <SelectTrigger className="w-[180px]" size="sm">
+              <Tag className="size-4 shrink-0 text-muted-foreground" />
               <SelectValue>{(v) => (v === ALL ? "Tất cả danh mục" : v)}</SelectValue>
             </SelectTrigger>
             <SelectContent>
@@ -92,7 +93,8 @@ export function ExpenseSection({
           </Select>
 
           <Select value={day} onValueChange={(v) => setDay(v ?? ALL)}>
-            <SelectTrigger className="w-[130px]" size="sm">
+            <SelectTrigger className="w-[150px]" size="sm">
+              <CalendarDays className="size-4 shrink-0 text-muted-foreground" />
               <SelectValue>{(v) => (v === ALL ? "Tất cả ngày" : formatDayShort(v))}</SelectValue>
             </SelectTrigger>
             <SelectContent>

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Cell, Pie, PieChart, Sector } from "recharts";
 import { ChartContainer, type ChartConfig } from "@/components/ui/chart";
 import { formatVND } from "@/lib/format";
@@ -21,6 +21,14 @@ export function CategoryChart({
 }) {
   const [hover, setHover] = useState<number | null>(null);
   const [mouse, setMouse] = useState({ x: 0, y: 0 });
+
+  // On mobile, tapping a slice leaves it "stuck" (no mouseleave on touch).
+  // Clear the highlight/tooltip as soon as the page scrolls.
+  useEffect(() => {
+    const clear = () => setHover(null);
+    window.addEventListener("scroll", clear, { passive: true });
+    return () => window.removeEventListener("scroll", clear);
+  }, []);
 
   const isDimmed = (category: string) => selected !== ALL && selected !== category;
   const total = data.reduce((s, d) => s + d.amount, 0);
