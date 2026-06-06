@@ -62,10 +62,21 @@ export function ExpenseDialog({
   const [amount, setAmount] = useState<number>(expense?.amount ?? 0);
   const [category, setCategory] = useState<string>(expense?.category ?? categories[0] ?? "");
   const [newCategory, setNewCategory] = useState("");
+  const [item, setItem] = useState<string>(expense?.item ?? "");
+  const [note, setNote] = useState<string>(expense?.note ?? "");
   const [deleting, setDeleting] = useState(false);
   const isEdit = Boolean(expense);
   const creatingCat = category === NEW_CAT;
   const resolvedCategory = creatingCat ? newCategory.trim() : category;
+
+  // In edit mode, only surface Save when something actually changed.
+  const dirty =
+    !isEdit ||
+    item.trim() !== expense!.item ||
+    toISO(date) !== expense!.date ||
+    amount !== expense!.amount ||
+    resolvedCategory !== expense!.category ||
+    note.trim() !== (expense!.note ?? "");
 
   async function handleDelete() {
     if (!expense) return;
@@ -110,7 +121,14 @@ export function ExpenseDialog({
           <div className="grid gap-4 py-4">
             <div className="grid gap-2">
               <Label htmlFor="item">Hạng mục</Label>
-              <Input id="item" name="item" defaultValue={expense?.item} placeholder="vd: Ghẹ, Xe taxi" required />
+              <Input
+                id="item"
+                name="item"
+                value={item}
+                onChange={(e) => setItem(e.target.value)}
+                placeholder="vd: Ghẹ, Xe taxi"
+                required
+              />
             </div>
 
             <div className="grid grid-cols-2 gap-3">
@@ -200,7 +218,13 @@ export function ExpenseDialog({
 
             <div className="grid gap-2">
               <Label htmlFor="note">Ghi chú</Label>
-              <Input id="note" name="note" defaultValue={expense?.note ?? ""} placeholder="tuỳ chọn (vd: Hải sản)" />
+              <Input
+                id="note"
+                name="note"
+                value={note}
+                onChange={(e) => setNote(e.target.value)}
+                placeholder="tuỳ chọn (vd: Hải sản)"
+              />
             </div>
           </div>
 
@@ -230,9 +254,11 @@ export function ExpenseDialog({
                 </AlertDialogContent>
               </AlertDialog>
             )}
-            <Button type="submit" disabled={pending} className="h-10">
-              {pending ? "Đang lưu..." : isEdit ? "Lưu" : "Thêm"}
-            </Button>
+            {dirty && (
+              <Button type="submit" disabled={pending} className="h-10">
+                {pending ? "Đang lưu..." : isEdit ? "Lưu" : "Thêm"}
+              </Button>
+            )}
           </DialogFooter>
         </form>
       </DialogContent>
