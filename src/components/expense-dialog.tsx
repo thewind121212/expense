@@ -101,8 +101,10 @@ export function ExpenseDialog({
       <DialogContent className="sm:max-w-[440px]">
         <form action={onSubmit}>
           <DialogHeader>
-            <DialogTitle>{isEdit ? "Sửa khoản chi" : "Thêm khoản chi"}</DialogTitle>
-            <DialogDescription>Đơn vị: đồng (đ)</DialogDescription>
+            <DialogTitle>{isEdit ? expense!.item : "Thêm khoản chi"}</DialogTitle>
+            <DialogDescription>
+              {isEdit ? "Chỉnh sửa hoặc xoá khoản chi này" : "Đơn vị: đồng (đ)"}
+            </DialogDescription>
           </DialogHeader>
 
           <div className="grid gap-4 py-4">
