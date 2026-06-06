@@ -62,7 +62,7 @@ export function ExpenseSection({
   return (
     <Card>
       <CardHeader className="flex flex-col gap-4">
-        <div className="flex items-center justify-between gap-3">
+        <div className="flex w-full items-center justify-between gap-3">
           <CardTitle className="min-w-0 truncate text-lg">Danh sách chi tiêu</CardTitle>
           <ExpenseDialog
             categories={categories}
