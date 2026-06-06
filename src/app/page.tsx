@@ -1,65 +1,75 @@
-import Image from "next/image";
+import { CalendarDays, Receipt, TrendingUp, Wallet, type LucideIcon } from "lucide-react";
+import { Card, CardContent } from "@/components/ui/card";
+import { Dashboard } from "@/components/dashboard";
+import { getOverview } from "@/lib/queries";
+import { formatVND } from "@/lib/format";
 
-export default function Home() {
+export const dynamic = "force-dynamic";
+
+function Stat({
+  icon: Icon,
+  label,
+  value,
+  color,
+}: {
+  icon: LucideIcon;
+  label: string;
+  value: string;
+  color: string;
+}) {
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
+    <Card>
+      <CardContent className="flex items-center gap-3 py-1">
+        <div className={`flex size-10 shrink-0 items-center justify-center rounded-lg ${color}`}>
+          <Icon className="size-5" />
+        </div>
+        <div className="min-w-0">
+          <div className="truncate text-[11px] uppercase tracking-wide text-muted-foreground">{label}</div>
+          <div className="text-xl font-semibold tabular-nums">{value}</div>
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
+export default async function Home() {
+  const o = await getOverview();
+
+  return (
+    <main className="mx-auto w-full max-w-5xl px-4 py-8 sm:px-6">
+      <header className="mb-6">
+        <h1 className="text-2xl font-bold tracking-tight">Quản lý chi tiêu — Du lịch Quy Nhơn (5N4Đ)</h1>
+        <p className="text-sm text-muted-foreground">Tháng 6/2026 · đơn vị: đồng (đ)</p>
+      </header>
+
+      <section className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+        <Stat
+          icon={Wallet}
+          color="bg-indigo-100 text-indigo-600 dark:bg-indigo-500/15 dark:text-indigo-400"
+          label="Tổng chi tiêu"
+          value={formatVND(o.total)}
         />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
-        </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
-        </div>
-      </main>
-    </div>
+        <Stat
+          icon={CalendarDays}
+          color="bg-emerald-100 text-emerald-600 dark:bg-emerald-500/15 dark:text-emerald-400"
+          label="Số ngày đã đi"
+          value={String(o.daysWithSpend)}
+        />
+        <Stat
+          icon={TrendingUp}
+          color="bg-amber-100 text-amber-600 dark:bg-amber-500/15 dark:text-amber-400"
+          label="Trung bình / ngày"
+          value={formatVND(o.avgPerDay)}
+        />
+        <Stat
+          icon={Receipt}
+          color="bg-rose-100 text-rose-600 dark:bg-rose-500/15 dark:text-rose-400"
+          label="Số giao dịch"
+          value={String(o.count)}
+        />
+      </section>
+
+      <Dashboard overview={o} />
+    </main>
   );
 }
