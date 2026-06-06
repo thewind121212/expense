@@ -11,16 +11,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
 import { type Expense } from "@/db/schema";
-import { formatDayShort, formatVND } from "@/lib/format";
+import { formatDateLong, formatDayShort, formatVND } from "@/lib/format";
 import { ExpenseDialog } from "./expense-dialog";
 
 export const ALL = "__all__";
@@ -49,6 +41,23 @@ export function ExpenseSection({
   );
 
   const filteredTotal = filtered.reduce((s, e) => s + e.amount, 0);
+
+  // Group filtered expenses by day, newest day first.
+  const groups = useMemo(() => {
+    const map = new Map<string, Expense[]>();
+    for (const e of filtered) {
+      const list = map.get(e.date) ?? [];
+      list.push(e);
+      map.set(e.date, list);
+    }
+    return [...map.entries()]
+      .sort((a, b) => (a[0] < b[0] ? 1 : -1))
+      .map(([date, items]) => ({
+        date,
+        items,
+        total: items.reduce((s, e) => s + e.amount, 0),
+      }));
+  }, [filtered]);
 
   return (
     <Card>
@@ -98,49 +107,53 @@ export function ExpenseSection({
         </div>
       </CardHeader>
 
-      <CardContent>
-        <div className="mb-2 text-sm text-muted-foreground">
+      <CardContent className="space-y-3">
+        <div className="text-sm text-muted-foreground">
           {filtered.length} khoản · {formatVND(filteredTotal)} · chạm vào dòng để sửa / xoá
         </div>
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead className="whitespace-nowrap">Ngày</TableHead>
-              <TableHead>Hạng mục</TableHead>
-              <TableHead className="hidden sm:table-cell">Danh mục</TableHead>
-              <TableHead className="hidden md:table-cell">Ghi chú</TableHead>
-              <TableHead className="whitespace-nowrap text-right">Số tiền</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {filtered.length === 0 ? (
-              <TableRow>
-                <TableCell colSpan={5} className="h-24 text-center text-muted-foreground">
-                  Không có khoản chi nào
-                </TableCell>
-              </TableRow>
-            ) : (
-              filtered.map((e) => (
-                <ExpenseDialog
-                  key={e.id}
-                  expense={e}
-                  categories={categories}
-                  trigger={
-                    <TableRow className="cursor-pointer">
-                      <TableCell className="whitespace-nowrap tabular-nums">{formatDayShort(e.date)}</TableCell>
-                      <TableCell className="font-medium">{e.item}</TableCell>
-                      <TableCell className="hidden sm:table-cell">{e.category}</TableCell>
-                      <TableCell className="hidden text-muted-foreground md:table-cell">{e.note}</TableCell>
-                      <TableCell className="whitespace-nowrap text-right font-medium tabular-nums">
-                        {formatVND(e.amount)}
-                      </TableCell>
-                    </TableRow>
-                  }
-                />
-              ))
-            )}
-          </TableBody>
-        </Table>
+
+        {groups.length === 0 ? (
+          <div className="flex h-24 items-center justify-center rounded-xl border border-dashed text-sm text-muted-foreground">
+            Không có khoản chi nào
+          </div>
+        ) : (
+          groups.map((g) => (
+            <section key={g.date} className="overflow-hidden rounded-xl border">
+              <header className="flex items-center justify-between gap-3 border-b bg-muted/50 px-4 py-2.5">
+                <div className="flex min-w-0 items-baseline gap-2">
+                  <span className="truncate text-sm font-semibold">{formatDateLong(g.date)}</span>
+                  <span className="shrink-0 text-[11px] text-muted-foreground">· {g.items.length} khoản</span>
+                </div>
+                <span className="shrink-0 text-sm font-semibold tabular-nums">{formatVND(g.total)}</span>
+              </header>
+              <ul className="divide-y">
+                {g.items.map((e) => (
+                  <li key={e.id}>
+                    <ExpenseDialog
+                      expense={e}
+                      categories={categories}
+                      trigger={
+                        <button
+                          type="button"
+                          className="flex w-full items-center gap-3 px-4 py-3 text-left transition-colors hover:bg-muted/60"
+                        >
+                          <div className="min-w-0 flex-1">
+                            <div className="truncate font-medium">{e.item}</div>
+                            <div className="truncate text-xs text-muted-foreground">
+                              {e.category}
+                              {e.note ? ` · ${e.note}` : ""}
+                            </div>
+                          </div>
+                          <div className="shrink-0 font-medium tabular-nums">{formatVND(e.amount)}</div>
+                        </button>
+                      }
+                    />
+                  </li>
+                ))}
+              </ul>
+            </section>
+          ))
+        )}
       </CardContent>
     </Card>
   );
